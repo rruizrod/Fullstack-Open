@@ -19,23 +19,24 @@ const Part = props => {
   );
 };
 
-const Content = props => {
+const Content = ({ parts }) => {
   return (
     <div>
-      <Part part={props.parts[0].name} exercise={props.parts[0].exercises} />
-      <Part part={props.parts[1].name} exercise={props.parts[1].exercises} />
-      <Part part={props.parts[2].name} exercise={props.parts[2].exercises} />
+      <Part part={parts[0].name} exercise={parts[0].exercises} />
+      <Part part={parts[1].name} exercise={parts[1].exercises} />
+      <Part part={parts[2].name} exercise={parts[2].exercises} />
     </div>
   );
 };
 
 const Total = props => {
+  const e1 = props.exercises1;
+  const e2 = props.exercises2;
+  const e3 = props.exercises3;
+
   return (
     <div>
-      <p>
-        Number of exercises{" "}
-        {props.exercises1 + props.exercises2 + props.exercises3}
-      </p>
+      <p>Number of exercises {e1 + e2 + e3}</p>
     </div>
   );
 };
