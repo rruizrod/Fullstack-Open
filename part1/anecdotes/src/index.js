@@ -1,10 +1,56 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
-const App = props => {
-  const [selected, setSelected] = useState(0);
+const Button = ({ event, text }) => {
+  return <button onClick={event}>{text}</button>;
+};
 
-  return <div>{props.anecdotes[selected]}</div>;
+const App = props => {
+  const INITIAL_VOTE = {
+    list: [0, 0, 0, 0, 0, 0]
+  };
+  const INITIAL_TOP = {
+    anec: "",
+    topVote: 0
+  };
+
+  const [selected, setSelected] = useState(0);
+  const [vote, setVote] = useState(INITIAL_VOTE);
+  const [top, setTop] = useState(INITIAL_TOP);
+
+  const setRandom = () => {
+    return setSelected(Math.floor(Math.random() * 6));
+  };
+
+  const setToVote = sel => {
+    const copy = { ...vote };
+    // increment the property 2 value by one
+    copy.list[sel] += 1;
+
+    if (copy.list[sel] > top.topVote) {
+      const topCopy = { top };
+      topCopy.anec = props.anecdotes[sel];
+      topCopy.topVote = copy.list[sel];
+
+      setTop(topCopy);
+    }
+
+    setVote(copy);
+  };
+
+  return (
+    <div>
+      <h1>Anecdote of the day</h1>
+      <p>{props.anecdotes[selected]}</p>
+      <Button event={() => setRandom()} text="Next Anecdote" />
+      <Button event={() => setToVote(selected)} text="Vote" />
+      <p>Has {vote.list[selected]} votes.</p>
+
+      <h1>Anecdote with the most votes</h1>
+      <p>{top.anec}</p>
+      <p>Has {top.topVote} votes.</p>
+    </div>
+  );
 };
 
 const anecdotes = [
