@@ -19,17 +19,27 @@ const Parts = props => {
   return <div>{partSplit()}</div>;
 };
 
-/*const Total = props => {
-  console.log("Total", props.course);
+const Total = props => {
+  const parts = props.course.parts;
+  console.log("Total", parts);
+  const totalExercises = () => {
+    let total = 0;
+    parts.forEach(element => {
+      total += element.exercises
+    });
 
-  return <div></div>;
-};*/
+    return total
+  }
+
+  return <p>Total of {totalExercises()} exercises</p>;
+};
 
 const Content = ({ course }) => {
   console.log("Content", course);
   return (
     <div>
       <Parts course={course} />
+      <Total course={course} />
     </div>
   );
 };
