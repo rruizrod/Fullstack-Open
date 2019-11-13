@@ -10,10 +10,10 @@ const Header = props => {
 };
 
 const Parts = props => {
-  const parts = props.course;
+  const parts = props.course.parts;
   console.log("Part", parts);
   const partSplit = () =>
-    parts.map(part => <p>{part.name} {part.exercises}</p>)
+    parts.map(part => <p key={part.id}>{part.name} {part.exercises}</p>)
 
 
   return <div>{partSplit()}</div>;
