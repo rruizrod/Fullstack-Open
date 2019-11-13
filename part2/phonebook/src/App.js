@@ -1,5 +1,56 @@
 import React, { useState } from "react";
 
+const Filter = props => {
+  return (
+    <div>
+      Filter by <input value={props.send} onChange={props.onChange} />
+    </div>
+  );
+};
+
+const PersonForm = props => {
+  const name = props.name;
+  const number = props.number;
+  const nameChange = props.onNameChange;
+  const numberChange = props.onNumberChange;
+  const click = props.onClick;
+
+  return (
+    <form>
+      <div>
+        name: <input value={name} onChange={nameChange} />
+      </div>
+      <div>
+        number: <input value={number} onChange={numberChange} />
+      </div>
+      <div>
+        <button type="submit" onClick={click}>
+          add
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const Persons = props => {
+  const persons = props.pe;
+  const search = props.se;
+  const personsFilter = persons.filter(person => {
+    const p = person.name.toLowerCase();
+    const s = search.toLowerCase();
+    if (p.includes(s)) {
+      return person.name;
+    }
+  });
+  const people = () =>
+    personsFilter.map(person => (
+      <p key={person.name}>
+        {person.name} {person.number}
+      </p>
+    ));
+  return <div>{people()}</div>;
+};
+
 const App = () => {
   const [persons, setPersons] = useState([
     { name: "Arto Hellas", number: "040-123456" },
@@ -44,40 +95,20 @@ const App = () => {
     setNewNumber("");
   };
 
-  const personsList = () => {
-    const personsFilter = persons.filter(person =>
-      person.name.includes(search)
-    );
-    const people = () =>
-      personsFilter.map(person => (
-        <p key={person.name}>
-          {person.name} {person.number}
-        </p>
-      ));
-    return <div>{people()}</div>;
-  };
-
   return (
     <div>
       <h2>Phonebook</h2>
-      filter shown with
-      <input value={search} onChange={handleSearch} />
-      <h3>Add A New</h3>
-      <form>
-        <div>
-          name: <input value={newName} onChange={handleNameChange} />
-        </div>
-        <div>
-          number: <input value={newNumber} onChange={handleNumberChange} />
-        </div>
-        <div>
-          <button type="submit" onClick={handleNameAdd}>
-            add
-          </button>
-        </div>
-      </form>
-      <h2>Numbers</h2>
-      {personsList()}
+      <Filter send={search} onChange={handleSearch} />
+      <h3>Add A New Contact</h3>
+      <PersonForm
+        name={newName}
+        number={newNumber}
+        onNameChange={handleNameChange}
+        onNumberChange={handleNumberChange}
+        onClick={handleNameAdd}
+      />
+      <h3>Numbers</h3>
+      <Persons pe={persons} se={search} />
     </div>
   );
 };
