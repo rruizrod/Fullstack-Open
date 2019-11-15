@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from "react";
 import personService from "./services/personsService";
 
+const Notification = ({ notif }) => {
+  if (notif === null) {
+    return null;
+  }
+
+  return (
+    <div className={notif.type}>
+      <p>{notif.message}</p>
+    </div>
+  );
+};
+
 const Filter = props => {
   return (
     <div>
@@ -43,6 +55,8 @@ const Persons = props => {
     if (p.includes(s)) {
       return person.name;
     }
+
+    return null;
   });
   const people = () =>
     personsFilter.map(person => (
@@ -54,7 +68,7 @@ const Persons = props => {
               `Are you sure you wish to delete ${person.name}`
             );
             if (val) {
-              del(person.id);
+              del(person);
             }
           }}
         >
@@ -70,6 +84,7 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [search, setSearch] = useState("");
+  const [notification, setNotification] = useState({});
 
   useEffect(() => {
     personService.getAll().then(initialPeople => {
@@ -108,27 +123,55 @@ const App = () => {
           setPersons(
             persons.map(person => (person.id !== id ? person : returnedPerson))
           );
+          const newNotification = {
+            message: `Successfully updated ${returnedPerson.name}'s number!`,
+            type: "success"
+          };
+          setNotification(newNotification);
         });
       }
     } else {
       console.log("Button Clicked", event.target);
       personService.add(personOBJ).then(returnedPerson => {
         setPersons(persons.concat(returnedPerson));
+        const newNotification = {
+          message: `Successfully added ${returnedPerson.name}' to your phonebook!`,
+          type: "success"
+        };
+        setNotification(newNotification);
       });
     }
+    setTimeout(() => setNotification({}), 5000);
     setNewName("");
     setNewNumber("");
   };
 
-  const handleDelete = id => {
-    personService.del(id).then(returned => {
-      setPersons(persons.filter(p => p.id !== id));
-    });
+  const handleDelete = person => {
+    personService
+      .del(person.id)
+      .then(returned => {
+        setPersons(persons.filter(p => p.id !== person.id));
+        const newNotif = {
+          message: `${person.name} has been deleted from the server!`,
+          type: "success"
+        };
+        setNotification(newNotif);
+      })
+      .catch(error => {
+        const newNotif = {
+          message: `${person.name} has already been deleted from the server!`,
+          type: "error"
+        };
+        setNotification(newNotif);
+      });
+
+    setTimeout(() => setNotification({}), 5000);
   };
 
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification notif={notification} />
       <Filter send={search} onChange={handleSearch} />
       <h3>Add A New Contact</h3>
       <PersonForm
