@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import personService from "./services/personsService";
 
 const Filter = props => {
   return (
@@ -36,6 +36,7 @@ const PersonForm = props => {
 const Persons = props => {
   const persons = props.pe;
   const search = props.se;
+  const del = props.onDel;
   const personsFilter = persons.filter(person => {
     const p = person.name.toLowerCase();
     const s = search.toLowerCase();
@@ -47,6 +48,18 @@ const Persons = props => {
     personsFilter.map(person => (
       <p key={person.name}>
         {person.name} {person.number}
+        <button
+          onClick={() => {
+            const val = window.confirm(
+              `Are you sure you wish to delete ${person.name}`
+            );
+            if (val) {
+              del(person.id);
+            }
+          }}
+        >
+          Delete
+        </button>
       </p>
     ));
   return <div>{people()}</div>;
@@ -59,23 +72,20 @@ const App = () => {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:3001/persons").then(response => {
-      setPersons(response.data);
+    personService.getAll().then(initialPeople => {
+      setPersons(initialPeople);
     });
   }, []);
 
   const handleNameChange = event => {
-    console.log(event.target.value);
     setNewName(event.target.value);
   };
 
   const handleNumberChange = event => {
-    console.log(event.target.value);
     setNewNumber(event.target.value);
   };
 
   const handleSearch = event => {
-    console.log(event.target.value);
     setSearch(event.target.value);
   };
 
@@ -91,10 +101,18 @@ const App = () => {
         name: newName,
         number: newNumber
       };
-      setPersons(persons.concat(personOBJ));
+      personService.add(personOBJ).then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson));
+      });
     }
     setNewName("");
     setNewNumber("");
+  };
+
+  const handleDelete = id => {
+    personService.del(id).then(returned => {
+      setPersons(persons.filter(p => p.id !== id));
+    });
   };
 
   return (
@@ -110,7 +128,7 @@ const App = () => {
         onClick={handleNameAdd}
       />
       <h3>Numbers</h3>
-      <Persons pe={persons} se={search} />
+      <Persons pe={persons} se={search} onDel={handleDelete} />
     </div>
   );
 };
