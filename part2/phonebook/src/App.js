@@ -91,16 +91,27 @@ const App = () => {
 
   const handleNameAdd = event => {
     event.preventDefault();
+    const personOBJ = {
+      name: newName,
+      number: newNumber
+    };
     let x = persons.map(person => person.name);
     x = x.indexOf(newName);
     if (x >= 0) {
-      window.alert(newName + " is already added to your phonebook");
+      const y = window.confirm(
+        newName +
+          " is already added to your phonebook, would you like to update with new number?"
+      );
+      const id = persons[x].id;
+      if (y) {
+        personService.update(id, personOBJ).then(returnedPerson => {
+          setPersons(
+            persons.map(person => (person.id !== id ? person : returnedPerson))
+          );
+        });
+      }
     } else {
       console.log("Button Clicked", event.target);
-      const personOBJ = {
-        name: newName,
-        number: newNumber
-      };
       personService.add(personOBJ).then(returnedPerson => {
         setPersons(persons.concat(returnedPerson));
       });
