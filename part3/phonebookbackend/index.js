@@ -15,8 +15,18 @@ const generateID = () => {
   return Math.random(500000);
 };
 
+morgan.token("data", function(req, res) {
+  const data = req.body;
+  console.log(data);
+  if (!data.name) {
+    return;
+  }
+  return JSON.stringify(data);
+});
 app.use(bodyParser.json());
-app.use(morgan("tiny"));
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms :data")
+);
 
 app.get("/info", (request, response) => {
   const num = `Phonebook has info for ${persons.length} people.`;
