@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
-const PORT = 3001;
+const cors = require("cors");
 
 let persons = [
   {
@@ -19,15 +19,19 @@ morgan.token("data", function(req, res) {
   const data = req.body;
   console.log(data);
   if (!data.name) {
-    return;
+    return "-";
   }
   return JSON.stringify(data);
 });
+//MIDDLEWARE DEFINITIONS
 app.use(bodyParser.json());
 app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :data")
 );
+app.use(cors());
+app.use(express.static("build"));
 
+//REST OF SERVER CODE
 app.get("/info", (request, response) => {
   const num = `Phonebook has info for ${persons.length} people.`;
   const time = `${Date()}`;
@@ -82,6 +86,7 @@ app.delete("/api/persons/:id", (request, response) => {
   response.status(204).end();
 });
 
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
