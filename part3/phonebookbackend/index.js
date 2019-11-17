@@ -1,20 +1,13 @@
+require("dotenv").config();
+
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
-const morgan = require("morgan");
-const cors = require("cors");
+const morgan = require("morgan"); //DEL LATER
+const cors = require("cors"); //DEL LATER
+const Person = require("./models/person");
 
-let persons = [
-  {
-    name: "Arto",
-    number: "123456",
-    id: 5
-  }
-];
-const generateID = () => {
-  return Math.random(500000);
-};
-
+//MORGAN TOKEN TO DISPLAY DATA PASSED TO PUSH OPERATION
 morgan.token("data", function(req, res) {
   const data = req.body;
   console.log(data);
@@ -40,43 +33,40 @@ app.get("/info", (request, response) => {
 });
 
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then(persons => {
+    response.json(persons.map(person => person.toJSON()));
+  });
 });
 
 app.post("/api/persons", (request, response) => {
   const body = request.body;
-  const exists = persons.find(person => person.name === body.name);
 
   if (!body.name || !body.number) {
     return response.status(400).json({
       error: "Name or number missing"
     });
-  } else if (exists) {
-    return response.status(400).json({
-      error: "Name already exists"
-    });
   }
 
-  const newPerson = {
-    name: body.name,
-    number: body.number,
-    id: generateID()
-  };
-
-  persons = persons.concat(newPerson);
-
-  response.json(newPerson);
+  newPerson.save().then(savedPerson => {
+    response.json(savedPerson.toJSON());
+  });
 });
 
 app.get("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
-  const person = persons.find(person => person.id === id);
 
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
+  Person.findById(id)
+    .then(person => {
+      if (person) {
+        response.json(person.toJSON());
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch(error => {
+      console.log(error);
+      response.status(400).send({ error: "Malformatted ID" });
+    });
 });
 
 app.delete("/api/persons/:id", (request, response) => {
@@ -86,7 +76,7 @@ app.delete("/api/persons/:id", (request, response) => {
   response.status(204).end();
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
