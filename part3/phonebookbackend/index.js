@@ -16,29 +16,49 @@ morgan.token("data", function(req, res) {
   }
   return JSON.stringify(data);
 });
+
 //MIDDLEWARE DEFINITIONS
+app.use(express.static("build"));
 app.use(bodyParser.json());
 app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :data")
 );
 app.use(cors());
-app.use(express.static("build"));
+
+//ERROR HANDLER FOR INCORRECT ID
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError" && error.kind === "ObjectId") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
+};
+
+app.use(errorHandler);
 
 //REST OF SERVER CODE
-app.get("/info", (request, response) => {
-  const num = `Phonebook has info for ${persons.length} people.`;
-  const time = `${Date()}`;
+app.get("/info", (request, response, next) => {
+  Person.countDocuments({}, function(error, result) {
+    if (error) {
+      next(error);
+    } else {
+      const num = `Phonebook has info for ${result} people.`;
+      const time = `${Date()}`;
 
-  response.send(`<p>${num}</p><p>${time}</p>`);
+      response.send(`<p>${num}</p><p>${time}</p>`);
+    }
+  });
 });
 
-app.get("/api/persons", (request, response) => {
+app.get("/api/persons", (request, response, next) => {
   Person.find({}).then(persons => {
     response.json(persons.map(person => person.toJSON()));
   });
 });
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
   if (!body.name || !body.number) {
@@ -47,13 +67,18 @@ app.post("/api/persons", (request, response) => {
     });
   }
 
+  const newPerson = new Person({
+    name: body.name,
+    number: body.number
+  });
+
   newPerson.save().then(savedPerson => {
     response.json(savedPerson.toJSON());
   });
 });
 
-app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
+app.get("/api/persons/:id", (request, response, next) => {
+  const id = request.params.id;
 
   Person.findById(id)
     .then(person => {
@@ -63,17 +88,34 @@ app.get("/api/persons/:id", (request, response) => {
         response.status(404).end();
       }
     })
-    .catch(error => {
-      console.log(error);
-      response.status(400).send({ error: "Malformatted ID" });
-    });
+    .catch(error => next(error));
 });
 
-app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  persons = persons.filter(note => note.id !== id);
+app.put("/api/persons/:id", (request, response, next) => {
+  const body = request.body;
+  const person = {
+    number: body.number
+  };
 
-  response.status(204).end();
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then(updated => {
+      response.json(updated.toJSON());
+    })
+    .catch(error => next(error));
+});
+
+app.delete("/api/persons/:id", (request, response, next) => {
+  const id = request.params.id;
+
+  Person.findByIdAndRemove(id)
+    .then(result => {
+      if (result) {
+        response.status(204).end();
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch(error => next(error));
 });
 
 const PORT = process.env.PORT;
