@@ -110,7 +110,7 @@ const App = () => {
       name: newName,
       number: newNumber
     };
-    /*let x = persons.map(person => person.name);
+    let x = persons.map(person => person.name);
     x = x.indexOf(newName);
     if (x >= 0) {
       const y = window.confirm(
@@ -130,17 +130,17 @@ const App = () => {
           setNotification(newNotification);
         });
       }
-    } else {*/
-    console.log("Button Clicked", event.target);
-    personService.add(personOBJ).then(returnedPerson => {
-      setPersons(persons.concat(returnedPerson));
-      const newNotification = {
-        message: `Successfully added ${returnedPerson.name}' to your phonebook!`,
-        type: "success"
-      };
-      setNotification(newNotification);
-    });
-    //}
+    } else {
+      console.log("Button Clicked", event.target);
+      personService.add(personOBJ).then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson));
+        const newNotification = {
+          message: `Successfully added ${returnedPerson.name} to your phonebook!`,
+          type: "success"
+        };
+        setNotification(newNotification);
+      });
+    }
     setTimeout(() => setNotification({}), 5000);
     setNewName("");
     setNewNumber("");
@@ -150,7 +150,6 @@ const App = () => {
     personService
       .del(person.id)
       .then(returned => {
-        setPersons(persons.filter(p => p.id !== person.id));
         const newNotif = {
           message: `${person.name} has been deleted from the server!`,
           type: "success"
@@ -165,6 +164,7 @@ const App = () => {
         setNotification(newNotif);
       });
 
+    setPersons(persons.filter(p => p.id !== person.id));
     setTimeout(() => setNotification({}), 5000);
   };
 
