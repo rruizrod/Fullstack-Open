@@ -1,4 +1,6 @@
-require("dotenv").config();
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
 const express = require("express");
 const app = express();
@@ -31,6 +33,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "CastError" && error.kind === "ObjectId") {
     return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
   }
 
   next(error);
@@ -60,21 +64,17 @@ app.get("/api/persons", (request, response, next) => {
 
 app.post("/api/persons", (request, response, next) => {
   const body = request.body;
-
-  if (!body.name || !body.number) {
-    return response.status(400).json({
-      error: "Name or number missing"
-    });
-  }
-
   const newPerson = new Person({
     name: body.name,
     number: body.number
   });
 
-  newPerson.save().then(savedPerson => {
-    response.json(savedPerson.toJSON());
-  });
+  newPerson
+    .save()
+    .then(savedPerson => {
+      response.json(savedPerson.toJSON());
+    })
+    .catch(error => next(error));
 });
 
 app.get("/api/persons/:id", (request, response, next) => {
@@ -118,7 +118,7 @@ app.delete("/api/persons/:id", (request, response, next) => {
     .catch(error => next(error));
 });
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
