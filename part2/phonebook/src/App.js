@@ -119,27 +119,47 @@ const App = () => {
       );
       const id = persons[x].id;
       if (y) {
-        personService.update(id, personOBJ).then(returnedPerson => {
-          setPersons(
-            persons.map(person => (person.id !== id ? person : returnedPerson))
-          );
-          const newNotification = {
-            message: `Successfully updated ${returnedPerson.name}'s number!`,
-            type: "success"
-          };
-          setNotification(newNotification);
-        });
+        personService
+          .update(id, personOBJ)
+          .then(returnedPerson => {
+            setPersons(
+              persons.map(person =>
+                person.id !== id ? person : returnedPerson
+              )
+            );
+            const newNotification = {
+              message: `Successfully updated ${returnedPerson.name}'s number!`,
+              type: "success"
+            };
+            setNotification(newNotification);
+          })
+          .catch(error => {
+            const newNotif = {
+              message: error.response.data,
+              type: "error"
+            };
+            setNotification(newNotif);
+          });
       }
     } else {
       console.log("Button Clicked", event.target);
-      personService.add(personOBJ).then(returnedPerson => {
-        setPersons(persons.concat(returnedPerson));
-        const newNotification = {
-          message: `Successfully added ${returnedPerson.name} to your phonebook!`,
-          type: "success"
-        };
-        setNotification(newNotification);
-      });
+      personService
+        .add(personOBJ)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson));
+          const newNotification = {
+            message: `Successfully added ${returnedPerson.name} to your phonebook!`,
+            type: "success"
+          };
+          setNotification(newNotification);
+        })
+        .catch(error => {
+          const newNotif = {
+            message: error.response.data,
+            type: "error"
+          };
+          setNotification(newNotif);
+        });
     }
     setTimeout(() => setNotification({}), 5000);
     setNewName("");
