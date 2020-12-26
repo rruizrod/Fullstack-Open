@@ -1,65 +1,59 @@
-import React, { useState } from "react";
-import ReactDOM from "react-dom";
+import React, { useState } from 'react'
+import ReactDOM from 'react-dom'
 
-const Button = ({ event, text }) => {
-  return <button onClick={event}>{text}</button>;
-};
+const Button = (props) => {
+  return (
+    <button onClick={props.handleClick}>{props.text}</button>
+  )
+}
 
-const App = props => {
-  const INITIAL_VOTE = {
-    list: [0, 0, 0, 0, 0, 0]
-  };
-  const INITIAL_TOP = {
-    anec: "",
-    topVote: 0
-  };
+const App = (props) => {
+  const [selected, setSelected] = useState(0)
+  const [points, setPoints] = useState(new Array(6).fill(0), [])
+  const [max, setMax] = useState({index: 0, value: 0})
 
-  const [selected, setSelected] = useState(0);
-  const [vote, setVote] = useState(INITIAL_VOTE);
-  const [top, setTop] = useState(INITIAL_TOP);
+  const selectRandom = () => {
+    const num = Math.floor(Math.random() * 6);
+    setSelected(num);
+  }
 
-  const setRandom = () => {
-    return setSelected(Math.floor(Math.random() * 6));
-  };
+  const vote = (num) => {
+    const copy = {...points}
+    copy[selected] += 1;
+    setPoints(copy)
 
-  const setToVote = sel => {
-    const copy = { ...vote };
-    // increment the property 2 value by one
-    copy.list[sel] += 1;
-
-    if (copy.list[sel] > top.topVote) {
-      const topCopy = { top };
-      topCopy.anec = props.anecdotes[sel];
-      topCopy.topVote = copy.list[sel];
-
-      setTop(topCopy);
+    if(copy[selected] > max.value){
+      const copyMax = max
+      copyMax.index = selected
+      copyMax.value = copy[selected]
+      setMax(copyMax)
     }
-
-    setVote(copy);
-  };
+  }
 
   return (
     <div>
-      <h1>Anecdote of the day</h1>
+      <h1>Anecdote of the Day</h1>
       <p>{props.anecdotes[selected]}</p>
-      <Button event={() => setRandom()} text="Next Anecdote" />
-      <Button event={() => setToVote(selected)} text="Vote" />
-      <p>Has {vote.list[selected]} votes.</p>
-
-      <h1>Anecdote with the most votes</h1>
-      <p>{top.anec}</p>
-      <p>Has {top.topVote} votes.</p>
+      <p>has {points[selected]} votes</p>
+      <Button text="Vote" handleClick={() => vote()}/>
+      <Button text="Next Anecdote" handleClick={() => selectRandom()}/>
+      <h1>Anecdote with most Votes</h1>
+      <p>{props.anecdotes[max.index]}</p>
+      <p>has {points[max.index]} votes</p>
     </div>
-  );
-};
+  )
+}
 
 const anecdotes = [
-  "If it hurts, do it more often",
-  "Adding manpower to a late software project makes it later!",
-  "The first 90 percent of the code accounts for the first 90 percent of the development time...The remaining 10 percent of the code accounts for the other 90 percent of the development time.",
-  "Any fool can write code that a computer can understand. Good programmers write code that humans can understand.",
-  "Premature optimization is the root of all evil.",
-  "Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it."
-];
+  'If it hurts, do it more often',
+  'Adding manpower to a late software project makes it later!',
+  'The first 90 percent of the code accounts for the first 90 percent of the development time...The remaining 10 percent of the code accounts for the other 90 percent of the development time.',
+  'Any fool can write code that a computer can understand. Good programmers write code that humans can understand.',
+  'Premature optimization is the root of all evil.',
+  'Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.'
+]
 
-ReactDOM.render(<App anecdotes={anecdotes} />, document.getElementById("root"));
+ReactDOM.render(
+  <App anecdotes={anecdotes}/>,
+  document.getElementById('root')
+)

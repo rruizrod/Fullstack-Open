@@ -1,9 +1,0 @@
-POST http://localhost:3003/api/blogs
-Content-Type: application/json
-
-{
-    "title": "RICARDO MAKES WEBSITE",
-    "author": "Ricardo Ruiz",
-    "url": "GOOD MEME",
-    "likes": 200000
-}
