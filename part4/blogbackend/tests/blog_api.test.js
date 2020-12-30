@@ -10,11 +10,12 @@ describe('Blog API Test', () => {
 
     beforeEach(async () => {
         await Blog.deleteMany({})
+        
+        const blogObj = helper.initialBlogs
+            .map(blog => new Blog(blog))
 
-        helper.initialBlogs.forEach(async (blog) => {
-            let blogObject = new Blog(blog)
-            await blogObject.save()
-        })
+        const promiseArray = blogObj.map(blog => blog.save())
+        await Promise.all(promiseArray)
     })
 
     test('Blogs are JSON', async () => {
@@ -81,6 +82,33 @@ describe('Blog API Test', () => {
         expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
     })
     
+    test('Test get by ID', async () => {
+        const blogs = await helper.blogsInDb()
+        
+        const newBlog = await api.get(`/api/blogs/${blogs[0].id}`)
+
+        expect(newBlog.body.title).toEqual(blogs[0].title)
+
+    })
+
+    test('Test delete by ID', async () => {
+        const blogs = await helper.blogsInDb()
+
+        const blogToDel = blogs[0]
+
+        await api
+                .delete(`/api/blogs/${blogToDel.id}`)
+                .expect(204)
+
+        const blogsAtEnd = await helper.blogsInDb()
+        
+        expect(blogsAtEnd).toHaveLength(blogs.length - 1)
+
+        const title = blogsAtEnd.map(blog => blog.title)
+
+        expect(title).not.toContain(blogs[0].title)
+    })
+
     afterAll(() => {
         mongoose.connection.close()
     })
