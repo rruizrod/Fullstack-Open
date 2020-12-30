@@ -6,17 +6,17 @@ const api = supertest(app)
 
 const Blog = require('../models/blog')
 
-describe('Blog API Test', () => {
+beforeEach(async () => {
+    await Blog.deleteMany({})
+    
+    const blogObj = helper.initialBlogs
+        .map(blog => new Blog(blog))
 
-    beforeEach(async () => {
-        await Blog.deleteMany({})
-        
-        const blogObj = helper.initialBlogs
-            .map(blog => new Blog(blog))
+    const promiseArray = blogObj.map(blog => blog.save())
+    await Promise.all(promiseArray)
+})
 
-        const promiseArray = blogObj.map(blog => blog.save())
-        await Promise.all(promiseArray)
-    })
+describe('Blog FORMAT Test', () => {
 
     test('Blogs are JSON', async () => {
         await api
@@ -25,12 +25,43 @@ describe('Blog API Test', () => {
             .expect('Content-Type', /application\/json/)
     })
     
-    test('ID field exists', async () => {
+    test('ID field exists in blogs', async () => {
         const blogs = await helper.blogsInDb()
         
         blogs.forEach(blog => expect(blog.id).toBeDefined())
     })
+})
 
+describe('Blog ID operations', () => {
+    test('GET by ID works', async () => {
+        const blogs = await helper.blogsInDb()
+        
+        const newBlog = await api.get(`/api/blogs/${blogs[0].id}`)
+
+        expect(newBlog.body.title).toEqual(blogs[0].title)
+
+    })
+
+    test('DELETE by ID works', async () => {
+        const blogs = await helper.blogsInDb()
+
+        const blogToDel = blogs[0]
+
+        await api
+                .delete(`/api/blogs/${blogToDel.id}`)
+                .expect(204)
+
+        const blogsAtEnd = await helper.blogsInDb()
+        
+        expect(blogsAtEnd).toHaveLength(blogs.length - 1)
+
+        const title = blogsAtEnd.map(blog => blog.title)
+
+        expect(title).not.toContain(blogs[0].title)
+    })
+})
+
+describe('Blog ADD Tests', () => {
     test('Can add blog', async () => {
         const newBlog = {
             title: 'Hilo',
@@ -51,7 +82,7 @@ describe('Blog API Test', () => {
         expect(titles).toContain(newBlog.title)
     })
 
-    test('Test defaulting no likes to 0', async () => {
+    test('Blog with no likes specified default to 0', async () => {
         const newBlog = {
             title: 'Hilo',
             author: 'Ricardo Ruiz',
@@ -68,7 +99,7 @@ describe('Blog API Test', () => {
             expect(blogsAtEnd[blogsAtEnd.length - 1].likes).toBe(0)
     })
 
-    test('Test empty blog', async () => {
+    test('Empty Blog returns 400 and not added', async () => {
         const newBlog = {
             author: 'Ricardo',
         }
@@ -81,35 +112,8 @@ describe('Blog API Test', () => {
         const blogsAtEnd = await helper.blogsInDb()
         expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
     })
-    
-    test('Test get by ID', async () => {
-        const blogs = await helper.blogsInDb()
-        
-        const newBlog = await api.get(`/api/blogs/${blogs[0].id}`)
+})
 
-        expect(newBlog.body.title).toEqual(blogs[0].title)
-
-    })
-
-    test('Test delete by ID', async () => {
-        const blogs = await helper.blogsInDb()
-
-        const blogToDel = blogs[0]
-
-        await api
-                .delete(`/api/blogs/${blogToDel.id}`)
-                .expect(204)
-
-        const blogsAtEnd = await helper.blogsInDb()
-        
-        expect(blogsAtEnd).toHaveLength(blogs.length - 1)
-
-        const title = blogsAtEnd.map(blog => blog.title)
-
-        expect(title).not.toContain(blogs[0].title)
-    })
-
-    afterAll(() => {
-        mongoose.connection.close()
-    })
+afterAll(() => {
+    mongoose.connection.close()
 })
