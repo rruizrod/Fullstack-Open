@@ -42,6 +42,24 @@ describe('Blog ID operations', () => {
 
     })
 
+    test('PUT (update) by ID works', async () => {
+        const initialBlogs = await helper.blogsInDb()
+
+        const firstBlog = initialBlogs[0]
+        firstBlog.likes++
+
+        await api
+                .put(`/api/blogs/${firstBlog.id}`)
+                .send(firstBlog)
+                .expect(200)
+                .expect('Content-Type', /application\/json/)
+        
+        const blogsAtEnd = await helper.blogsInDb()
+        
+        expect(blogsAtEnd[0].likes).toEqual(firstBlog.likes)
+
+    })
+
     test('DELETE by ID works', async () => {
         const blogs = await helper.blogsInDb()
 
@@ -66,7 +84,8 @@ describe('Blog ADD Tests', () => {
         const newBlog = {
             title: 'Hilo',
             author: 'Ricardo Ruiz',
-            url: 'localhost'
+            url: 'localhost',
+            userId: '5fefb25cde09d026f7057abe'
         }
 
         await api
@@ -86,7 +105,8 @@ describe('Blog ADD Tests', () => {
         const newBlog = {
             title: 'Hilo',
             author: 'Ricardo Ruiz',
-            url: 'localhost'
+            url: 'localhost',
+            userId: '5fefb25cde09d026f7057abe'
         }
 
         await api
