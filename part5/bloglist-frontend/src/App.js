@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import Togglable from './components/Togglable'
+import BlogForm from './components/BlogForm'
 
 const App = () => {
   // -- BLOGS PROP --
@@ -11,11 +13,6 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-
-  // -- BLOG FORM --
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setURL] = useState('')
 
   // -- GET INITIAL BLOGS FROM SERVER --
   useEffect(() => {
@@ -83,41 +80,33 @@ const App = () => {
     </form>
 )
 
-  const handleBlog = async (event) => {
-    event.preventDefault()
-
+  const handleBlog = async (blogObj) => {
     try{
-      const addedBlog = await blogService.create({
-                                title,
-                                author,
-                                url,
-                              })
+      const addedBlog = await blogService.create(blogObj)
 
       const newBlogs = blogs.concat(addedBlog)
       setBlogs(newBlogs)
-
-      setTitle('')
-      setAuthor('')
-      setURL('')
+      
     }catch(exception){
       console.log(exception)
     }
   }
 
-  const blogForm = () => (
-    <form onSubmit={handleBlog}>
-      <div>title
-        <input type="text" value={title} onChange={({target}) => setTitle(target.value)}/>
-      </div>
-      <div>author
-        <input type="text" value={author} onChange={({target}) => setAuthor(target.value)}/>
-      </div>
-      <div>url
-        <input type="text" value={url} onChange={({target}) => setURL(target.value)}/>
-      </div>
-      <button type="submit">Post</button>
-    </form>
-  )
+  const handleLike = async (blogObj) => {
+    try{
+        const blogSent = {
+            user: blogObj.user.id,
+            title: blogObj.title,
+            author: blogObj.author,
+            url: blogObj.url,
+            likes: blogObj.likes++
+        }
+        const updatedBlog = await blogService.update(blogSent)
+        setBlogs(blogs.map(blog => blog.id !== blogObj.id ? blog : updatedBlog ))
+    }catch(exception){
+        console.log(exception)
+    }
+  }
 
   if(user === null){
     return (
@@ -136,11 +125,13 @@ const App = () => {
         <button onClick={handleLogout}>Logout</button>
       </div>
       <div>
-        {blogForm()}
+        <Togglable buttonLabel='Add Blog'>
+            <BlogForm createBlog={handleBlog}/>
+        </Togglable>
       </div>
       <div>
         {blogs.map(blog =>
-          <Blog key={blog.id} blog={blog} />
+          <Blog key={blog.id} blog={blog} onLike={() => handleLike(blog)} />
         )}
       </div>
     </div>
