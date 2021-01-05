@@ -81,8 +81,8 @@ blogsRouter.put('/:id', async (request, response) => {
         user: body.user
     }
 
-    const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog, {new: true})
-
+    const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog)
+    
     if(updatedBlog){
         response.json(updatedBlog)
     }else{
