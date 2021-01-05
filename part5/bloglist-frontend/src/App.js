@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
 import loginService from './services/login'
@@ -80,8 +80,10 @@ const App = () => {
     </form>
 )
 
+  const blogFormRef = useRef()
   const handleBlog = async (blogObj) => {
     try{
+      blogFormRef.current.toggleVisibility()
       const addedBlog = await blogService.create(blogObj)
 
       const newBlogs = blogs.concat(addedBlog)
@@ -93,18 +95,33 @@ const App = () => {
   }
 
   const handleLike = async (blogObj) => {
+
     try{
         const blogSent = {
             user: blogObj.user.id,
+            id: blogObj.id,
             title: blogObj.title,
             author: blogObj.author,
             url: blogObj.url,
-            likes: blogObj.likes++
+            likes: blogObj.likes + 1
         }
-        const updatedBlog = await blogService.update(blogSent)
-        setBlogs(blogs.map(blog => blog.id !== blogObj.id ? blog : updatedBlog ))
+        blogObj.likes++
+        await blogService.update(blogSent)
+        setBlogs(blogs.map(blog => blog.id !== blogObj.id ? blog : blogObj ))
     }catch(exception){
         console.log(exception)
+    }
+  }
+
+  const handleDelete = async (blogObj) => {
+    if(window.confirm(`Removing blog '${blogObj.title}' by ${blogObj.author}`)){
+      try{
+        await blogService.deleteBlog(blogObj)
+
+        setBlogs(blogs.filter(blog => blog.id !== blogObj.id))
+      }catch(exception){
+        console.log(exception)
+      }
     }
   }
 
@@ -125,13 +142,13 @@ const App = () => {
         <button onClick={handleLogout}>Logout</button>
       </div>
       <div>
-        <Togglable buttonLabel='Add Blog'>
+        <Togglable buttonLabel='Add Blog' ref={blogFormRef}>
             <BlogForm createBlog={handleBlog}/>
         </Togglable>
       </div>
       <div>
         {blogs.map(blog =>
-          <Blog key={blog.id} blog={blog} onLike={() => handleLike(blog)} />
+          <Blog key={blog.id} blog={blog} onLike={() => handleLike(blog)} onDelete={() => handleDelete(blog)}/>
         )}
       </div>
     </div>
